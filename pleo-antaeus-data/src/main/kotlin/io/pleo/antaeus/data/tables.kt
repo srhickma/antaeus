@@ -1,11 +1,11 @@
-/*
-    Defines database tables and their schemas.
-    To be used by `AntaeusDal`.
- */
-
 package io.pleo.antaeus.data
 
 import org.jetbrains.exposed.sql.Table
+
+/**
+ * Defines database tables and their schemas.
+ * To be used by `AntaeusDal`.
+ */
 
 object InvoiceTable : Table() {
     val id = integer("id").autoIncrement().primaryKey()

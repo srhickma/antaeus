@@ -1,8 +1,3 @@
-/*
-    Defines the main() entry point of the app.
-    Configures the database and sets up the REST web service.
- */
-
 @file:JvmName("AntaeusApp")
 
 package io.pleo.antaeus.app
@@ -23,6 +18,11 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import setupInitialData
 import java.sql.Connection
+
+/**
+ * Defines the main() entry point of the app.
+ * Configures the database and sets up the REST web service.
+ */
 
 fun main() {
     // The tables to create in the database.
@@ -64,4 +64,3 @@ fun main() {
         customerService = customerService
     ).run()
 }
-

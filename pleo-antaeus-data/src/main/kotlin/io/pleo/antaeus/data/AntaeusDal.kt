@@ -1,10 +1,3 @@
-/*
-    Implements the data access layer (DAL).
-    This file implements the database queries used to fetch and insert rows in our database tables.
-
-    See the `mappings` module for the conversions between database rows and Kotlin objects.
- */
-
 package io.pleo.antaeus.data
 
 import io.pleo.antaeus.models.Currency
@@ -18,6 +11,12 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
+/**
+ * Implements the data access layer (DAL).
+ * This file implements the database queries used to fetch and insert rows in our database tables.
+ *
+ * See the `mappings` module for the conversions between database rows and Kotlin objects.
+ */
 class AntaeusDal(private val db: Database) {
     fun fetchInvoice(id: Int): Invoice? {
         // transaction(db) runs the internal query as a new database transaction.

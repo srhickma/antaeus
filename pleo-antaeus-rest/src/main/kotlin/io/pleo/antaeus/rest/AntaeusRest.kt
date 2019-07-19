@@ -1,7 +1,3 @@
-/*
-    Configures the rest app along with basic exception handling and URL endpoints.
- */
-
 package io.pleo.antaeus.rest
 
 import io.javalin.Javalin
@@ -14,6 +10,9 @@ import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
+/**
+ * Configures the rest app along with basic exception handling and URL endpoints.
+ */
 class AntaeusRest (
     private val invoiceService: InvoiceService,
     private val customerService: CustomerService
