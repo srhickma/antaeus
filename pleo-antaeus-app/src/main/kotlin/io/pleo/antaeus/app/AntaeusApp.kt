@@ -2,7 +2,6 @@
 
 package io.pleo.antaeus.app
 
-import getPaymentProvider
 import io.pleo.antaeus.core.services.BillingService
 import io.pleo.antaeus.core.services.CustomerService
 import io.pleo.antaeus.core.services.InvoiceService
@@ -16,7 +15,6 @@ import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import setupInitialData
 import java.sql.Connection
 
 /**
@@ -28,15 +26,15 @@ fun main() {
     val tables = arrayOf(InvoiceTable, CustomerTable)
 
     val db = Database
-        .connect("jdbc:sqlite:/tmp/data.db", "org.sqlite.JDBC")
-        .also {
-            TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
-            transaction(it) {
-                addLogger(StdOutSqlLogger)
-                SchemaUtils.drop(*tables)
-                SchemaUtils.create(*tables)
+            .connect("jdbc:sqlite:/tmp/data.db", "org.sqlite.JDBC")
+            .also {
+                TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+                transaction(it) {
+                    addLogger(StdOutSqlLogger)
+                    SchemaUtils.drop(*tables)
+                    SchemaUtils.create(*tables)
+                }
             }
-        }
 
     val dal = AntaeusDal(db = db)
 
@@ -51,7 +49,7 @@ fun main() {
     val billingService = BillingService(paymentProvider = paymentProvider)
 
     AntaeusRest(
-        invoiceService = invoiceService,
-        customerService = customerService
+            invoiceService = invoiceService,
+            customerService = customerService
     ).run()
 }
