@@ -1,8 +1,3 @@
-/*
-    Defines mappings between database rows and Kotlin objects.
-    To be used by `AntaeusDal`.
- */
-
 package io.pleo.antaeus.data
 
 import io.pleo.antaeus.models.Currency
@@ -11,6 +6,11 @@ import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.Money
 import org.jetbrains.exposed.sql.ResultRow
+
+/**
+ * Defines mappings between database rows and Kotlin objects.
+ * To be used by `AntaeusDal`.
+ */
 
 fun ResultRow.toInvoice(): Invoice = Invoice(
     id = this[InvoiceTable.id],

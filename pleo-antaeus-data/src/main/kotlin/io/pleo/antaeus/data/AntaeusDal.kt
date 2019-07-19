@@ -1,10 +1,3 @@
-/*
-    Implements the data access layer (DAL).
-    This file implements the database queries used to fetch and insert rows in our database tables.
-
-    See the `mappings` module for the conversions between database rows and Kotlin objects.
- */
-
 package io.pleo.antaeus.data
 
 import io.pleo.antaeus.models.Currency
@@ -18,11 +11,15 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
+/**
+ * Implements the data access layer (DAL).
+ * This file implements the database queries used to fetch and insert rows in our database tables.
+ *
+ * See the `mappings` module for the conversions between database rows and Kotlin objects.
+ */
 class AntaeusDal(private val db: Database) {
     fun fetchInvoice(id: Int): Invoice? {
-        // transaction(db) runs the internal query as a new database transaction.
         return transaction(db) {
-            // Returns the first invoice with matching id.
             InvoiceTable
                 .select { InvoiceTable.id.eq(id) }
                 .firstOrNull()
@@ -39,8 +36,7 @@ class AntaeusDal(private val db: Database) {
     }
 
     fun createInvoice(amount: Money, customer: Customer, status: InvoiceStatus = InvoiceStatus.PENDING): Invoice? {
-        val id = transaction(db) {
-            // Insert the invoice and returns its new id.
+        return transaction(db) {
             InvoiceTable
                 .insert {
                     it[this.value] = amount.value
@@ -48,9 +44,7 @@ class AntaeusDal(private val db: Database) {
                     it[this.status] = status.toString()
                     it[this.customerId] = customer.id
                 } get InvoiceTable.id
-        }
-
-        return fetchInvoice(id!!)
+        }?.let { fetchInvoice(it) }
     }
 
     fun fetchCustomer(id: Int): Customer? {
@@ -71,13 +65,10 @@ class AntaeusDal(private val db: Database) {
     }
 
     fun createCustomer(currency: Currency): Customer? {
-        val id = transaction(db) {
-            // Insert the customer and return its new id.
+        return transaction(db) {
             CustomerTable.insert {
                 it[this.currency] = currency.toString()
             } get CustomerTable.id
-        }
-
-        return fetchCustomer(id!!)
+        }?.let { fetchCustomer(it) }
     }
 }

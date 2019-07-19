@@ -1,3 +1,4 @@
+package io.pleo.antaeus.app
 
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.data.AntaeusDal
@@ -8,7 +9,9 @@ import io.pleo.antaeus.models.Money
 import java.math.BigDecimal
 import kotlin.random.Random
 
-// This will create all schemas and setup initial data
+/**
+ * This will create all schemas and setup initial data
+ */
 internal fun setupInitialData(dal: AntaeusDal) {
     val customers = (1..100).mapNotNull {
         dal.createCustomer(
@@ -30,6 +33,7 @@ internal fun setupInitialData(dal: AntaeusDal) {
     }
 }
 
+// TODO(shane) remove this all.
 // This is the mocked instance of the payment provider
 internal fun getPaymentProvider(): PaymentProvider {
     return object : PaymentProvider {
