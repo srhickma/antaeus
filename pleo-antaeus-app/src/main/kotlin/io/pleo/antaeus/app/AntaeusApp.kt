@@ -1,62 +1,69 @@
-@file:JvmName("AntaeusApp")
+@file:JvmName("Entrypoint")
 
 package io.pleo.antaeus.app
 
+import dagger.Component
+import dagger.Module
+import dagger.Provides
+import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.core.services.BillingService
-import io.pleo.antaeus.core.services.CustomerService
-import io.pleo.antaeus.core.services.InvoiceService
-import io.pleo.antaeus.core.time.Clock
 import io.pleo.antaeus.data.AntaeusDal
-import io.pleo.antaeus.data.CustomerTable
-import io.pleo.antaeus.data.InvoiceTable
+import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.rest.AntaeusRest
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.random.Random
 
-/**
- * Defines the main() entry point of the app.
- * Configures the database and sets up the REST web service.
- */
 fun main() {
-    val tables = arrayOf(InvoiceTable, CustomerTable)
+    AntaeusApp()
+}
 
-    val db = Database
-            .connect("jdbc:sqlite:/tmp/data.db", "org.sqlite.JDBC")
-            .also {
-                TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
-                transaction(it) {
-                    addLogger(StdOutSqlLogger)
-                    SchemaUtils.drop(*tables)
-                    SchemaUtils.create(*tables)
-                }
+class AntaeusApp {
+    @Inject
+    lateinit var dal: AntaeusDal
+
+    @Inject
+    lateinit var billingService: BillingService
+
+    @Inject
+    lateinit var rest: AntaeusRest
+
+    init {
+        DaggerAppComponent.create().inject(this)
+
+        TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+
+        setupInitialData(dal)
+
+        billingService.startCronCharger()
+        rest.run()
+    }
+}
+
+@Singleton
+@Component(modules = [AppModule::class])
+interface AppComponent {
+    fun inject(app: AntaeusApp)
+}
+
+@Module
+class AppModule {
+    @Singleton
+    @Provides
+    fun provideDb(): Database {
+        return Database.connect("jdbc:sqlite:/tmp/data.db", "org.sqlite.JDBC")
+    }
+
+    @Singleton
+    @Provides
+    fun providePaymentProvider(): PaymentProvider {
+        return object : PaymentProvider {
+            override fun charge(invoice: Invoice): Boolean {
+                return Random.nextBoolean()
             }
-
-    val dal = AntaeusDal(db = db)
-
-    setupInitialData(dal = dal)
-
-    val paymentProvider = getPaymentProvider()
-
-    val invoiceService = InvoiceService(dal = dal)
-    val customerService = CustomerService(dal = dal)
-
-    val clock = Clock()
-
-    // TODO(shane) consider using di.
-    BillingService(
-            paymentProvider = paymentProvider,
-            invoiceService = invoiceService,
-            dal = dal,
-            clock = clock
-    )
-
-    AntaeusRest(
-            invoiceService = invoiceService,
-            customerService = customerService
-    ).run()
+        }
+    }
 }

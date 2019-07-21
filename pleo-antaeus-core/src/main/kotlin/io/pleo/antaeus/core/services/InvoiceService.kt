@@ -4,11 +4,12 @@ import io.pleo.antaeus.core.exceptions.InvoiceNotFoundException
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
+import javax.inject.Inject
 
 /**
  * Implements endpoints related to invoices.
  */
-class InvoiceService(private val dal: AntaeusDal) {
+class InvoiceService @Inject constructor(private val dal: AntaeusDal) {
     fun fetchAll(): List<Invoice> {
         return dal.fetchInvoices()
     }

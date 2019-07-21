@@ -12,20 +12,21 @@ import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import mu.KotlinLogging
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
 
 private const val CHARGER_BATCH_SIZE = 100
 
 private val log = KotlinLogging.logger {}
+private val chargingSchedule = Schedule.parse("1 of month 10:00")
 private val cronJobGuard: AtomicBoolean = AtomicBoolean(false)
 
-class BillingService(
+class BillingService @Inject constructor(
         private val paymentProvider: PaymentProvider,
         private val invoiceService: InvoiceService,
         private val dal: AntaeusDal,
-        clock: Clock,
-        chargingSchedule: Schedule = Schedule.parse("1 of month 10:00")
+        private val clock: Clock
 ) {
-    init {
+    fun startCronCharger() {
         if (cronJobGuard.getAndSet(true)) {
             log.warn { "Multiple billing service instances present" }
         } else {

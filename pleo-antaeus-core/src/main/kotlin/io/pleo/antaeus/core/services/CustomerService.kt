@@ -3,11 +3,12 @@ package io.pleo.antaeus.core.services
 import io.pleo.antaeus.core.exceptions.CustomerNotFoundException
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Customer
+import javax.inject.Inject
 
 /**
  * Implements endpoints related to customers.
  */
-class CustomerService(private val dal: AntaeusDal) {
+class CustomerService @Inject constructor(private val dal: AntaeusDal) {
     fun fetchAll(): List<Customer> {
         return dal.fetchCustomers()
     }
