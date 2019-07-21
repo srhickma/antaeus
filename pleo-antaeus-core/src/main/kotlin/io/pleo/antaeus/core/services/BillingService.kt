@@ -5,25 +5,37 @@ import io.pleo.antaeus.core.exceptions.CurrencyMismatchException
 import io.pleo.antaeus.core.exceptions.CustomerNotFoundException
 import io.pleo.antaeus.core.exceptions.NetworkException
 import io.pleo.antaeus.core.external.PaymentProvider
+import io.pleo.antaeus.core.time.Clock
+import io.pleo.antaeus.core.time.CronJob
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import mu.KotlinLogging
+import java.util.concurrent.atomic.AtomicBoolean
+
+private const val CHARGER_BATCH_SIZE = 100
 
 private val log = KotlinLogging.logger {}
-private const val CHARGER_BATCH_SIZE = 100
+private val cronJobGuard: AtomicBoolean = AtomicBoolean(false)
 
 class BillingService(
         private val paymentProvider: PaymentProvider,
         private val invoiceService: InvoiceService,
         private val dal: AntaeusDal,
-        private val chargingSchedule: Schedule = Schedule.parse("1 of month 10:00")
+        clock: Clock,
+        chargingSchedule: Schedule = Schedule.parse("1 of month 10:00")
 ) {
     init {
-        // TODO(shane) start chron job using the charging schedule.
+        if (cronJobGuard.getAndSet(true)) {
+            log.warn { "Multiple billing service instances present" }
+        } else {
+            CronJob(chargingSchedule, clock) {
+                chargeInvoices()
+            }
+        }
     }
 
-    // TODO(shane) add appropriate locking (multi-thread? multi-server? etc.).
+    // TODO(shane) add appropriate multi-server locking.
     private fun chargeInvoices() {
         // Fetch in a separate transaction from payment charger api requests to
         // avoid transaction length proportional to # of invoices. This is especially
@@ -84,7 +96,7 @@ class BillingService(
     }
 }
 
-fun <T> MutableList<T>.popBack(): T? {
+private fun <T> MutableList<T>.popBack(): T? {
     if (isEmpty()) {
         return null
     }

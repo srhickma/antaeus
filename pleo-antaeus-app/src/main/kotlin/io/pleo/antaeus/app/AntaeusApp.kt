@@ -5,6 +5,7 @@ package io.pleo.antaeus.app
 import io.pleo.antaeus.core.services.BillingService
 import io.pleo.antaeus.core.services.CustomerService
 import io.pleo.antaeus.core.services.InvoiceService
+import io.pleo.antaeus.core.time.Clock
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.data.CustomerTable
 import io.pleo.antaeus.data.InvoiceTable
@@ -44,11 +45,14 @@ fun main() {
     val invoiceService = InvoiceService(dal = dal)
     val customerService = CustomerService(dal = dal)
 
+    val clock = Clock()
+
     // TODO(shane) consider using di.
     BillingService(
             paymentProvider = paymentProvider,
             invoiceService = invoiceService,
-            dal = dal
+            dal = dal,
+            clock = clock
     )
 
     AntaeusRest(
