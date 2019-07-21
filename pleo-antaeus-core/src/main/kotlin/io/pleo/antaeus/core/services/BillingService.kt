@@ -58,17 +58,16 @@ class BillingService(
         }
         if (customer.currency != invoice.amount.currency) {
             log.info { "Currency mismatch for invoice ${invoice.id}" }
-            // TODO(shane) how do we notify the customer to change their currency?
             return
         }
 
         try {
-            if (paymentProvider.charge(invoice)) {
-                // Charge was successful, mark the invoice as paid.
-                invoiceService.setStatus(invoice, InvoiceStatus.PAID)
-            } else {
+            // Set status before making request, since request cannot be rolled back.
+            invoiceService.setStatus(invoice, InvoiceStatus.PAID)
+
+            if (!paymentProvider.charge(invoice)) {
                 log.info { "Insufficient funds to charge invoice ${invoice.id}" }
-                // TODO(shane) how do we notify the customer to add funds?
+                invoiceService.setStatus(invoice, InvoiceStatus.PENDING)
             }
         } catch (e: CustomerNotFoundException) {
             log.error(e) {
