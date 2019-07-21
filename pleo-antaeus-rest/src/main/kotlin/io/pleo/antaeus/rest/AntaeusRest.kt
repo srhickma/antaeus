@@ -8,7 +8,7 @@ import io.pleo.antaeus.core.services.CustomerService
 import io.pleo.antaeus.core.services.InvoiceService
 import mu.KotlinLogging
 
-private val logger = KotlinLogging.logger {}
+private val log = KotlinLogging.logger {}
 
 /**
  * Configures the rest app along with basic exception handling and URL endpoints.
@@ -29,7 +29,7 @@ class AntaeusRest (
                 ctx.status(404)
             }
             exception(Exception::class.java) { e, _ ->
-                logger.error(e) { "Internal server error" }
+                log.error(e) { "Internal server error" }
             }
             error(404) { ctx -> ctx.json("not found") }
         }

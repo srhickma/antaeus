@@ -1,14 +1,7 @@
 package io.pleo.antaeus.data
 
-import io.pleo.antaeus.models.Currency
-import io.pleo.antaeus.models.Customer
-import io.pleo.antaeus.models.Invoice
-import io.pleo.antaeus.models.InvoiceStatus
-import io.pleo.antaeus.models.Money
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import io.pleo.antaeus.models.*
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
@@ -18,54 +11,80 @@ import org.jetbrains.exposed.sql.transactions.transaction
  * See the `mappings` module for the conversions between database rows and Kotlin objects.
  */
 class AntaeusDal(private val db: Database) {
+    fun <T> inTransaction(statement: Transaction.() -> T): T = transaction(db, statement)
+
     fun fetchInvoice(id: Int): Invoice? {
-        return transaction(db) {
+        return inTransaction {
             InvoiceTable
-                .select { InvoiceTable.id.eq(id) }
-                .firstOrNull()
-                ?.toInvoice()
+                    .select { InvoiceTable.id.eq(id) }
+                    .firstOrNull()
+                    ?.toInvoice()
         }
     }
 
-    fun fetchInvoices(): List<Invoice> {
-        return transaction(db) {
+    fun fetchOutstandingInvoices(): Iterable<Invoice> {
+        return inTransaction {
             InvoiceTable
-                .selectAll()
-                .map { it.toInvoice() }
+                    .select { InvoiceTable.status.eq(InvoiceStatus.PENDING.toString()) }
+                    .map { it.toInvoice() }
+        }
+    }
+
+    // TODO(shane) use iterables instead of lists.
+    fun fetchInvoices(): List<Invoice> {
+        return inTransaction {
+            InvoiceTable
+                    .selectAll()
+                    .map { it.toInvoice() }
         }
     }
 
     fun createInvoice(amount: Money, customer: Customer, status: InvoiceStatus = InvoiceStatus.PENDING): Invoice? {
-        return transaction(db) {
+        return inTransaction {
             InvoiceTable
-                .insert {
-                    it[this.value] = amount.value
-                    it[this.currency] = amount.currency.toString()
-                    it[this.status] = status.toString()
-                    it[this.customerId] = customer.id
-                } get InvoiceTable.id
+                    .insert {
+                        it[this.value] = amount.value
+                        it[this.currency] = amount.currency.toString()
+                        it[this.status] = status.toString()
+                        it[this.customerId] = customer.id
+                    } get InvoiceTable.id
         }?.let { fetchInvoice(it) }
     }
 
+    fun setInvoiceStatus(id: Int, status: InvoiceStatus) {
+        inTransaction {
+            InvoiceTable
+                    .update({ InvoiceTable.id.eq(id) }) {
+                        it[this.status] = status.toString()
+                    }
+        }
+    }
+
+    fun deleteInvoice(id: Int) {
+        inTransaction {
+            InvoiceTable.deleteWhere { InvoiceTable.id.eq(id) }
+        }
+    }
+
     fun fetchCustomer(id: Int): Customer? {
-        return transaction(db) {
+        return inTransaction {
             CustomerTable
-                .select { CustomerTable.id.eq(id) }
-                .firstOrNull()
-                ?.toCustomer()
+                    .select { CustomerTable.id.eq(id) }
+                    .firstOrNull()
+                    ?.toCustomer()
         }
     }
 
     fun fetchCustomers(): List<Customer> {
-        return transaction(db) {
+        return inTransaction {
             CustomerTable
-                .selectAll()
-                .map { it.toCustomer() }
+                    .selectAll()
+                    .map { it.toCustomer() }
         }
     }
 
     fun createCustomer(currency: Currency): Customer? {
-        return transaction(db) {
+        return inTransaction {
             CustomerTable.insert {
                 it[this.currency] = currency.toString()
             } get CustomerTable.id
