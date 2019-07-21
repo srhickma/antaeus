@@ -6,7 +6,9 @@ import javax.inject.Inject
 import java.time.Clock as JavaClock
 
 class Clock @Inject constructor() {
-    private var clock: JavaClock = JavaClock.systemDefaultZone()
+    private val baseClock = JavaClock.systemDefaultZone()
+    private var clock = JavaClock.systemDefaultZone()
+    private var offset = Duration.ZERO
     private val watchers: MutableList<ClockWatcher> = mutableListOf()
 
     fun watch(watcher: ClockWatcher) {
@@ -20,7 +22,8 @@ class Clock @Inject constructor() {
 
     @Synchronized
     fun advance(offset: Duration) {
-        clock = JavaClock.offset(clock, offset)
+        this.offset = this.offset.plus(offset)
+        clock = JavaClock.offset(baseClock, this.offset)
         for (watcher in watchers) {
             watcher.timeChanged()
         }
