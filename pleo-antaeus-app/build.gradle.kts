@@ -1,6 +1,7 @@
 plugins {
     application
     kotlin("jvm")
+    kotlin("kapt")
 }
 
 kotlinProject()
@@ -8,7 +9,7 @@ kotlinProject()
 dataLibs()
 
 application {
-    mainClassName = "io.pleo.antaeus.app.AntaeusApp"
+    mainClassName = "io.pleo.antaeus.app.Entrypoint"
 }
 
 dependencies {
@@ -16,4 +17,6 @@ dependencies {
     implementation(project(":pleo-antaeus-rest"))
     implementation(project(":pleo-antaeus-core"))
     compile(project(":pleo-antaeus-models"))
+    implementation("com.google.dagger:dagger:2.13")
+    kapt("com.google.dagger:dagger-compiler:2.13")
 }

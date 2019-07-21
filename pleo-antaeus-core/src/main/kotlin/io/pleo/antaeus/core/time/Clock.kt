@@ -2,9 +2,10 @@ package io.pleo.antaeus.core.time
 
 import java.time.Duration
 import java.time.ZonedDateTime
+import javax.inject.Inject
 import java.time.Clock as JavaClock
 
-class Clock {
+class Clock @Inject constructor() {
     private var clock: JavaClock = JavaClock.systemDefaultZone()
     private val watchers: MutableList<ClockWatcher> = mutableListOf()
 

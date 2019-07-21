@@ -1,11 +1,14 @@
 package io.pleo.antaeus.app
 
-import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.data.AntaeusDal
+import io.pleo.antaeus.data.CustomerTable
+import io.pleo.antaeus.data.InvoiceTable
 import io.pleo.antaeus.models.Currency
-import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.Money
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
 import java.math.BigDecimal
 import kotlin.random.Random
 
@@ -13,6 +16,14 @@ import kotlin.random.Random
  * This will create all schemas and setup initial data
  */
 internal fun setupInitialData(dal: AntaeusDal) {
+    dal.inTransaction {
+        val tables = arrayOf(InvoiceTable, CustomerTable)
+
+        addLogger(StdOutSqlLogger)
+        SchemaUtils.drop(*tables)
+        SchemaUtils.create(*tables)
+    }
+
     val customers = (1..100).mapNotNull {
         dal.createCustomer(
                 currency = Currency.values()[Random.nextInt(0, Currency.values().size)]
@@ -29,16 +40,6 @@ internal fun setupInitialData(dal: AntaeusDal) {
                     customer = customer,
                     status = if (it == 1) InvoiceStatus.PENDING else InvoiceStatus.PAID
             )
-        }
-    }
-}
-
-// TODO(shane) remove this all.
-// This is the mocked instance of the payment provider
-internal fun getPaymentProvider(): PaymentProvider {
-    return object : PaymentProvider {
-        override fun charge(invoice: Invoice): Boolean {
-            return Random.nextBoolean()
         }
     }
 }

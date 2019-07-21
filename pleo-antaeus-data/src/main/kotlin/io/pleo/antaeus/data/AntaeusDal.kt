@@ -3,6 +3,7 @@ package io.pleo.antaeus.data
 import io.pleo.antaeus.models.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import javax.inject.Inject
 
 /**
  * Implements the data access layer (DAL).
@@ -10,7 +11,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
  *
  * See the `mappings` module for the conversions between database rows and Kotlin objects.
  */
-class AntaeusDal(private val db: Database) {
+class AntaeusDal @Inject constructor(private val db: Database) {
     fun <T> inTransaction(statement: Transaction.() -> T): T = transaction(db, statement)
 
     fun fetchInvoice(id: Int): Invoice? {
