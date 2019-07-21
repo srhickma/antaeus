@@ -21,7 +21,6 @@ import java.sql.Connection
  * Defines the main() entry point of the app.
  * Configures the database and sets up the REST web service.
  */
-
 fun main() {
     val tables = arrayOf(InvoiceTable, CustomerTable)
 
@@ -45,8 +44,12 @@ fun main() {
     val invoiceService = InvoiceService(dal = dal)
     val customerService = CustomerService(dal = dal)
 
-    // This is _your_ billing service to be included where you see fit
-    val billingService = BillingService(paymentProvider = paymentProvider)
+    // TODO(shane) consider using di.
+    BillingService(
+            paymentProvider = paymentProvider,
+            invoiceService = invoiceService,
+            dal = dal
+    )
 
     AntaeusRest(
             invoiceService = invoiceService,
