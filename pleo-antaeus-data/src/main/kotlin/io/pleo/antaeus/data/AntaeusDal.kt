@@ -50,7 +50,6 @@ class AntaeusDal @Inject constructor(private val db: Database) {
         }
     }
 
-    // TODO(shane) use iterables instead of lists.
     fun fetchInvoices(): List<Invoice> {
         return inTransaction {
             InvoiceTable
