@@ -30,4 +30,9 @@ internal class TestUtils @Inject constructor(private val dal: AntaeusDal) {
         }
     }
 
+    companion object {
+        fun randomMoney(currency: Currency): Money {
+            return Money(BigDecimal(Random.nextInt(1, 100000)), currency)
+        }
+    }
 }

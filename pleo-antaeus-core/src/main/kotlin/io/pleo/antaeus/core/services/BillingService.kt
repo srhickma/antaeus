@@ -24,7 +24,6 @@ private val cronJob: AtomicReference<CronJob?> = AtomicReference(null)
 @Singleton
 class BillingService @Inject constructor(
         private val paymentProvider: PaymentProvider,
-        private val invoiceService: InvoiceService,
         private val dal: AntaeusDal,
         private val clock: Clock
 ) {
@@ -44,10 +43,11 @@ class BillingService @Inject constructor(
         // Fetch in a separate transaction from payment charger api requests to
         // avoid transaction length proportional to # of invoices. This is especially
         // important since we are making a network request for every invoice.
-        val invoices = invoiceService.fetchOutstanding().map { it.id }.toMutableList()
+        val invoices = dal.fetchOutstandingInvoices().map { it.id }.toMutableList()
 
         while (invoices.isNotEmpty()) {
-            val invoice = invoiceService.fetch(invoices.popBack() ?: break)
+            // Get next invoice to charge, or skip if it was deleted.
+            val invoice = dal.fetchInvoice(invoices.popBack()!!) ?: continue
             try {
                 tryChargeInvoice(invoice)
             } catch (t: Throwable) {
@@ -69,7 +69,7 @@ class BillingService @Inject constructor(
         // Pre-check conditions to avoid exceptions during normal operation.
         if (customer == null) {
             log.info { "Removing orphaned invoice ${invoice.id}" }
-            invoiceService.deleteInvoice(invoice)
+            dal.deleteInvoice(invoice.id)
             return
         }
         if (customer.currency != invoice.amount.currency) {
@@ -81,12 +81,12 @@ class BillingService @Inject constructor(
         // If the api request fails with an uncaught exception, it is better to
         // think the invoice is paid (even if it isn't), than to possibly
         // double-charge a customer.
-        invoiceService.setStatus(invoice, InvoiceStatus.PAID)
+        dal.setInvoiceStatus(invoice.id, InvoiceStatus.PAID)
 
         try {
             if (!paymentProvider.charge(invoice)) {
                 log.info { "Insufficient funds to charge invoice ${invoice.id}" }
-                invoiceService.setStatus(invoice, InvoiceStatus.PENDING)
+                dal.setInvoiceStatus(invoice.id, InvoiceStatus.PENDING)
             }
 
             return
@@ -106,7 +106,7 @@ class BillingService @Inject constructor(
         }
 
         // If an exception occurred, reset the invoice status as pending.
-        invoiceService.setStatus(invoice, InvoiceStatus.PENDING)
+        dal.setInvoiceStatus(invoice.id, InvoiceStatus.PENDING)
     }
 }
 
