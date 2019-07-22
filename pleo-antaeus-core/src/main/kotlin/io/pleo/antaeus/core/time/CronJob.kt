@@ -35,14 +35,22 @@ class CronJob(
         checkTime()
     }
 
+    fun stop() {
+        clock.unwatch(this)
+        waiter.get().interrupt()
+    }
+
     private fun startWaiter() {
-        try {
-            // This will not cause overflow, as long as no schedule has a period
-            // of over 292 million years.
-            Thread.sleep(ChronoUnit.MILLIS.between(clock.currentTime(), next))
-        } catch (e: InterruptedException) {
-            // We have been interrupted, gracefully exit.
-            return
+        val timeout = ChronoUnit.MILLIS.between(clock.currentTime(), next)
+        if (timeout > 0) {
+            try {
+                // This will not cause overflow, as long as no schedule has a period
+                // of over 292 million years.
+                Thread.sleep(timeout)
+            } catch (e: InterruptedException) {
+                // We have been interrupted, gracefully exit.
+                return
+            }
         }
 
         checkTime()
