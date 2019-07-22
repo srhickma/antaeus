@@ -2,7 +2,6 @@ package io.pleo.antaeus.core
 
 import io.pleo.antaeus.core.exceptions.CurrencyMismatchException
 import io.pleo.antaeus.core.exceptions.CustomerNotFoundException
-import io.pleo.antaeus.core.exceptions.NetworkException
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Customer
@@ -16,13 +15,13 @@ internal class FakePaymentProvider @Inject constructor(
         private val dal: AntaeusDal
 ) : PaymentProvider {
     private val balances: HashMap<Int, BigDecimal> = HashMap()
-    private var networkErrorNext = false
+    private val chargeListeners: HashMap<Int, () -> Unit> = HashMap()
 
     @Synchronized
     override fun charge(invoice: Invoice): Boolean {
-        if (networkErrorNext) {
-            networkErrorNext = false
-            throw NetworkException()
+        val listener = chargeListeners[invoice.id]
+        if (listener != null) {
+            listener()
         }
 
         val customer = dal.fetchCustomer(invoice.customerId)
@@ -35,7 +34,7 @@ internal class FakePaymentProvider @Inject constructor(
             )
         }
 
-        val currentBalance = balances.getOrDefault(customer.id, BigDecimal(0))
+        val currentBalance = balances.getOrDefault(customer.id, BigDecimal.ZERO)
         if (currentBalance < invoice.amount.value) {
             return false
         }
@@ -45,18 +44,18 @@ internal class FakePaymentProvider @Inject constructor(
     }
 
     @Synchronized
+    fun onCharge(invoice: Invoice, listener: () -> Unit) {
+        chargeListeners[invoice.id] = listener
+    }
+
+    @Synchronized
     fun addBalance(customer: Customer, balance: BigDecimal) {
-        val newBalance = balances.getOrDefault(customer.id, BigDecimal(0)).add(balance)
+        val newBalance = balances.getOrDefault(customer.id, BigDecimal.ZERO).add(balance)
         balances[customer.id] = newBalance
     }
 
     @Synchronized
     fun getBalance(customer: Customer): BigDecimal {
-        return balances.getOrDefault(customer.id, BigDecimal(0))
-    }
-
-    @Synchronized
-    fun setNetworkErrorNext(networkErrorNext: Boolean) {
-        this.networkErrorNext = networkErrorNext
+        return balances.getOrDefault(customer.id, BigDecimal.ZERO)
     }
 }
