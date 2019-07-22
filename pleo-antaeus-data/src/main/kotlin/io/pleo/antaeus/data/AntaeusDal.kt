@@ -2,8 +2,11 @@ package io.pleo.antaeus.data
 
 import io.pleo.antaeus.models.*
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.sql.Connection
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Implements the data access layer (DAL).
@@ -11,7 +14,23 @@ import javax.inject.Inject
  *
  * See the `mappings` module for the conversions between database rows and Kotlin objects.
  */
+@Singleton
 class AntaeusDal @Inject constructor(private val db: Database) {
+    /**
+     * Drop existing data and recreate the database schema.
+     */
+    init {
+        TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+
+        inTransaction {
+            val tables = arrayOf(InvoiceTable, CustomerTable)
+
+            addLogger(StdOutSqlLogger)
+            SchemaUtils.drop(*tables)
+            SchemaUtils.create(*tables)
+        }
+    }
+
     fun <T> inTransaction(statement: Transaction.() -> T): T = transaction(db, statement)
 
     fun fetchInvoice(id: Int): Invoice? {

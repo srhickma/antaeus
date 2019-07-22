@@ -8,12 +8,14 @@ import io.pleo.antaeus.core.services.CustomerService
 import io.pleo.antaeus.core.services.InvoiceService
 import mu.KotlinLogging
 import javax.inject.Inject
+import javax.inject.Singleton
 
 private val log = KotlinLogging.logger {}
 
 /**
  * Configures the rest app along with basic exception handling and URL endpoints.
  */
+@Singleton
 class AntaeusRest @Inject constructor(
         private val invoiceService: InvoiceService,
         private val customerService: CustomerService

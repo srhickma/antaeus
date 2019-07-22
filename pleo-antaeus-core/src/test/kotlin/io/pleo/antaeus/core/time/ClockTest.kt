@@ -1,13 +1,12 @@
 package io.pleo.antaeus.core.time
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
-class ClockTest {
+internal class ClockTest {
     @Test
     fun `current time`() {
         val clock = Clock()
@@ -38,18 +37,27 @@ class ClockTest {
     fun `watch time`() {
         val clock = Clock()
 
-        var called = false
+        var called = 0
         val initialTime = clock.currentTime()
 
-        clock.watch(object : ClockWatcher {
+        val watcher = object : ClockWatcher {
             override fun timeChanged() {
-                called = true
+                ++called
                 assertEquals(16, ChronoUnit.HOURS.between(initialTime, clock.currentTime()))
             }
-        })
+        }
+
+        clock.watch(watcher)
 
         clock.advance(Duration.ofHours(16))
 
-        assertTrue(called)
+        assertEquals(1, called)
+
+        clock.unwatch(watcher)
+
+        clock.advance(Duration.ofHours(4))
+
+        // Advances after `unwatch` no longer trigger `timeChanged()`.
+        assertEquals(1, called)
     }
 }

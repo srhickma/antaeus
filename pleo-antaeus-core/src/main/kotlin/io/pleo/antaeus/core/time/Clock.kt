@@ -3,8 +3,10 @@ package io.pleo.antaeus.core.time
 import java.time.Duration
 import java.time.ZonedDateTime
 import javax.inject.Inject
+import javax.inject.Singleton
 import java.time.Clock as JavaClock
 
+@Singleton
 class Clock @Inject constructor() {
     private val baseClock = JavaClock.systemDefaultZone()
     private var clock = JavaClock.systemDefaultZone()
@@ -13,6 +15,10 @@ class Clock @Inject constructor() {
 
     fun watch(watcher: ClockWatcher) {
         watchers.add(watcher)
+    }
+
+    fun unwatch(watcher: ClockWatcher) {
+        watchers.remove(watcher)
     }
 
     @Synchronized

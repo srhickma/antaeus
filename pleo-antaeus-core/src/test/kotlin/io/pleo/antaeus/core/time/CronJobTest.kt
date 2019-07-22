@@ -9,7 +9,7 @@ import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
-class CronJobTest {
+internal class CronJobTest {
     @Test
     fun `simple schedule advancement`() {
         val clock = Clock()
@@ -145,6 +145,30 @@ class CronJobTest {
         }
 
         assertEquals(2L, counter)
+    }
+
+    @Test
+    fun `stop job`() {
+        val clock = Clock()
+        val schedule = Schedule.every(1, ChronoUnit.MINUTES)
+
+        var counter = 0L
+
+        val job = CronJob(schedule, clock) {
+            ++counter
+        }
+
+        assertEquals(0L, counter)
+
+        clock.advance(Duration.ofSeconds(60))
+
+        assertEquals(1L, counter)
+
+        job.stop()
+
+        clock.advance(Duration.ofSeconds(60))
+
+        assertEquals(1L, counter)
     }
 
     private fun secondsBetween(a: ZonedDateTime, b: ZonedDateTime): Long {
