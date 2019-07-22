@@ -70,7 +70,7 @@ class CronJob(
             lock.unlock()
 
             // Start a new waiter.
-            waiter.getAndSet(thread { startWaiter() })
+            waiter.set(thread { startWaiter() })
 
             task()
         } else {
