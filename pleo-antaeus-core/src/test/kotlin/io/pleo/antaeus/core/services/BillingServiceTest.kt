@@ -5,6 +5,7 @@ import dagger.Component
 import io.pleo.antaeus.core.FakePaymentProvider
 import io.pleo.antaeus.core.TestModule
 import io.pleo.antaeus.core.TestUtils
+import io.pleo.antaeus.core.TestUtils.Companion.randomMoney
 import io.pleo.antaeus.core.exceptions.NetworkException
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.core.time.Clock
@@ -14,7 +15,6 @@ import io.pleo.antaeus.data.InvoiceTable
 import io.pleo.antaeus.models.Currency
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
-import io.pleo.antaeus.models.Money
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.update
 import org.junit.jupiter.api.Assertions.*
@@ -26,7 +26,6 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.random.Random
 
 internal class BillingServiceTest {
     @Inject
@@ -49,7 +48,7 @@ internal class BillingServiceTest {
 
     @BeforeEach
     fun setup() {
-        DaggerTestComponent.create().inject(this)
+        DaggerBillingServiceTestComponent.create().inject(this)
         fakePaymentProvider = paymentProvider as FakePaymentProvider
         testUtils.setupInitialData()
         billingService.startCronCharger()
@@ -367,10 +366,6 @@ internal class BillingServiceTest {
         assertEquals(InvoiceStatus.PAID, dal.fetchInvoice(invoice.id)!!.status)
     }
 
-    private fun randomMoney(currency: Currency): Money {
-        return Money(BigDecimal(Random.nextInt(1, 100000)), currency)
-    }
-
     private fun Clock.advanceToNextBilling() {
         advanceTo(chargingSchedule.next(currentTime()).plusSeconds(1))
     }
@@ -382,6 +377,6 @@ internal class BillingServiceTest {
 
 @Singleton
 @Component(modules = [TestModule::class])
-internal interface TestComponent {
+internal interface BillingServiceTestComponent {
     fun inject(test: BillingServiceTest)
 }
