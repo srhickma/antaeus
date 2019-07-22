@@ -33,9 +33,6 @@ internal class BillingServiceTest {
     lateinit var billingService: BillingService
 
     @Inject
-    lateinit var invoiceService: InvoiceService
-
-    @Inject
     lateinit var testUtils: TestUtils
 
     @Inject
@@ -168,7 +165,6 @@ internal class BillingServiceTest {
         // Start a second service.
         BillingService(
                 paymentProvider = paymentProvider,
-                invoiceService = invoiceService,
                 dal = dal,
                 clock = clock
         ).startCronCharger()

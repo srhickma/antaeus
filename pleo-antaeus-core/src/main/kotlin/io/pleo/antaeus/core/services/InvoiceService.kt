@@ -3,7 +3,6 @@ package io.pleo.antaeus.core.services
 import io.pleo.antaeus.core.exceptions.InvoiceNotFoundException
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Invoice
-import io.pleo.antaeus.models.InvoiceStatus
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,18 +15,7 @@ class InvoiceService @Inject constructor(private val dal: AntaeusDal) {
         return dal.fetchInvoices()
     }
 
-    fun fetchOutstanding(): Iterable<Invoice> = dal.fetchOutstandingInvoices()
-
     fun fetch(id: Int): Invoice {
         return dal.fetchInvoice(id) ?: throw InvoiceNotFoundException(id)
-    }
-
-    fun setStatus(invoice: Invoice, status: InvoiceStatus): Invoice {
-        dal.setInvoiceStatus(invoice.id, status)
-        return dal.fetchInvoice(invoice.id)!!
-    }
-
-    fun deleteInvoice(invoice: Invoice) {
-        dal.deleteInvoice(invoice.id)
     }
 }
