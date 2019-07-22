@@ -1,6 +1,7 @@
 package io.pleo.antaeus.core.external
 
 import io.pleo.antaeus.models.Invoice
+import javax.inject.Singleton
 
 /**
  * This is the payment provider. It is a "mock" of an external service that you can pretend runs on another system.
@@ -9,6 +10,7 @@ import io.pleo.antaeus.models.Invoice
  * This mock will succeed if the customer has enough money in their balance,
  * however the documentation lays out scenarios in which paying an invoice could fail.
  */
+@Singleton
 interface PaymentProvider {
     /**
      * Charge a customer's account the amount from the invoice.

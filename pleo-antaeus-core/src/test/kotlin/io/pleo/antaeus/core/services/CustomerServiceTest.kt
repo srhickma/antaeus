@@ -7,7 +7,7 @@ import io.pleo.antaeus.data.AntaeusDal
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
-class CustomerServiceTest {
+internal class CustomerServiceTest {
     private val dal = mockk<AntaeusDal> {
         every { fetchCustomer(404) } returns null
     }

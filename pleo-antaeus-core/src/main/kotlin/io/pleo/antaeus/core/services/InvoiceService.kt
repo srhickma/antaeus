@@ -5,10 +5,12 @@ import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Implements endpoints related to invoices.
  */
+@Singleton
 class InvoiceService @Inject constructor(private val dal: AntaeusDal) {
     fun fetchAll(): List<Invoice> {
         return dal.fetchInvoices()
